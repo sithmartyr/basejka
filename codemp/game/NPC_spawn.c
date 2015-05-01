@@ -4279,62 +4279,69 @@ parse and dispatch bot commands
 qboolean	showBBoxes = qfalse;
 void Cmd_NPC_f( gentity_t *ent )
 {
-	char	cmd[1024];
+    if(g_allowNPC.integer == 1)
+    {
+        char	cmd[1024];
 
-	trap->Argv( 1, cmd, 1024 );
+        trap->Argv( 1, cmd, 1024 );
 
-	if ( !cmd[0] )
-	{
-		Com_Printf( "Valid NPC commands are:\n" );
-		Com_Printf( " spawn [NPC type (from NPCs.cfg)]\n" );
-		Com_Printf( " kill [NPC targetname] or [all(kills all NPCs)] or 'team [teamname]'\n" );
-		Com_Printf( " showbounds (draws exact bounding boxes of NPCs)\n" );
-		Com_Printf( " score [NPC targetname] (prints number of kills per NPC)\n" );
-	}
-	else if ( Q_stricmp( cmd, "spawn" ) == 0 )
-	{
-		NPC_Spawn_f( ent );
-	}
-	else if ( Q_stricmp( cmd, "kill" ) == 0 )
-	{
-		NPC_Kill_f();
-	}
-	else if ( Q_stricmp( cmd, "showbounds" ) == 0 )
-	{//Toggle on and off
-		showBBoxes = showBBoxes ? qfalse : qtrue;
-	}
-	else if ( Q_stricmp ( cmd, "score" ) == 0 )
-	{
-		char		cmd2[1024];
-		gentity_t *thisent = NULL;
+        if ( !cmd[0] )
+        {
+            Com_Printf( "Valid NPC commands are:\n" );
+            Com_Printf( " spawn [NPC type (from NPCs.cfg)]\n" );
+            Com_Printf( " kill [NPC targetname] or [all(kills all NPCs)] or 'team [teamname]'\n" );
+            Com_Printf( " showbounds (draws exact bounding boxes of NPCs)\n" );
+            Com_Printf( " score [NPC targetname] (prints number of kills per NPC)\n" );
+        }
+        else if ( Q_stricmp( cmd, "spawn" ) == 0 )
+        {
+            NPC_Spawn_f( ent );
+        }
+        else if ( Q_stricmp( cmd, "kill" ) == 0 )
+        {
+            NPC_Kill_f();
+        }
+        else if ( Q_stricmp( cmd, "showbounds" ) == 0 )
+        {//Toggle on and off
+            showBBoxes = showBBoxes ? qfalse : qtrue;
+        }
+        else if ( Q_stricmp ( cmd, "score" ) == 0 )
+        {
+            char		cmd2[1024];
+            gentity_t *thisent = NULL;
 
-		trap->Argv( 2, cmd2, sizeof( cmd2 ) );
+            trap->Argv( 2, cmd2, sizeof( cmd2 ) );
 
-		if ( !cmd2[0] )
-		{//Show the score for all NPCs
-			int i;
+            if ( !cmd2[0] )
+            {//Show the score for all NPCs
+                int i;
 
-			Com_Printf( "SCORE LIST:\n" );
-			for ( i = 0; i < ENTITYNUM_WORLD; i++ )
-			{
-				thisent = &g_entities[i];
-				if ( !thisent || !thisent->client )
-				{
-					continue;
-				}
-				NPC_PrintScore( thisent );
-			}
-		}
-		else
-		{
-			if ( (thisent = G_Find( NULL, FOFS(targetname), cmd2 )) != NULL && thisent->client )
-			{
-				NPC_PrintScore( thisent );
-			}
-			else
-			{
-				Com_Printf( "ERROR: NPC score - no such NPC %s\n", cmd2 );
-			}
-		}
-	}
+                Com_Printf( "SCORE LIST:\n" );
+                for ( i = 0; i < ENTITYNUM_WORLD; i++ )
+                {
+                    thisent = &g_entities[i];
+                    if ( !thisent || !thisent->client )
+                    {
+                        continue;
+                    }
+                    NPC_PrintScore( thisent );
+                }
+            }
+            else
+            {
+                if ( (thisent = G_Find( NULL, FOFS(targetname), cmd2 )) != NULL && thisent->client )
+                {
+                    NPC_PrintScore( thisent );
+                }
+                else
+                {
+                    Com_Printf( "ERROR: NPC score - no such NPC %s\n", cmd2 );
+                }
+            }
+        }
+    }
+    else
+    {
+        trap->SendServerCommand(ent-g_entities, va("print \"NPCs are not allowed on this server!\n\""));
+    }
 }

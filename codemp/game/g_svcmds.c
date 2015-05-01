@@ -417,6 +417,53 @@ gclient_t	*ClientForString( const char *s ) {
 	return NULL;
 }
 
+void Svcmd_KillOther_f(gentity_t *ent)
+{
+    int     i;
+    int     x;
+    char    otherindex[MAX_TOKEN_CHARS];
+    gentity_t *otherEnt = NULL;
+
+    if(trap->Argc() < 2)
+    {
+        trap->SendServerCommand(ent-g_entities, "print \"Usage: killother <player id>\n\"");
+        return;
+    }
+
+    trap->Argv(1, otherindex, sizeof(otherindex));
+    i = ClientNumberFromString(ent, otherindex, qfalse);
+    //Kill all players.
+    if(otherindex == "-1")
+    {
+        for(x = 0; x <= 31; x++)
+        {
+            G_Kill(&g_entities[x]);
+        }
+        return;
+    }
+
+
+    if(i == -1)
+    {
+       return;
+    }
+
+    otherEnt = &g_entities[i];
+    if(!otherEnt->inuse || !otherEnt->client)
+    {
+        return;
+    }
+
+    if((otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == TEAM_SPECTATOR))
+    {
+        trap->SendServerCommand(ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "MUSTBEALIVE")));
+        return;
+    }
+
+    G_Kill(otherEnt);
+}
+
+
 /*
 ===================
 Svcmd_ForceTeam_f
@@ -491,6 +538,7 @@ svcmd_t svcmds[] = {
 	{ "entitylist",					Svcmd_EntityList_f,					qfalse },
 	{ "forceteam",					Svcmd_ForceTeam_f,					qfalse },
 	{ "game_memory",				Svcmd_GameMem_f,					qfalse },
+	{ "killother",                  Svcmd_KillOther_f,                  qfalse },
 	{ "listip",						Svcmd_ListIP_f,						qfalse },
 	{ "removeip",					Svcmd_RemoveIP_f,					qfalse },
 	{ "say",						Svcmd_Say_f,						qtrue },
